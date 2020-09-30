@@ -1,0 +1,12 @@
+{
+    "id": "IU",
+    "Swagger": true,
+    "web": {
+        "port": 20620
+    },
+    "db": {
+        "database": "IllusoryUniverse",
+        "host": "",
+        "port": 10620
+    }
+}
