@@ -16,7 +16,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto_1 = require("crypto");
+const mx_tool_1 = require("mx-tool");
 const mx_webserve_1 = require("mx-webserve");
+const defines_1 = require("../../../../defines/defines");
 const gameRPC_1 = require("../../../../rpcs/gameRPC");
 let _ = class _ {
     /**
@@ -24,7 +26,8 @@ let _ = class _ {
      * @date 2020-10-10
      * @group login - 登录相关
      * @route POST /game/local/login
-     * @param {string} name.query.required - 昵称
+     * @param {string} name.query.required - 游戏名称
+     * @param {string} pwd.query.required - 登录密码
      * @returns {{code:number}} 0 - 返回内容
      */
     login(param) {
@@ -39,12 +42,36 @@ let _ = class _ {
                 .login(data.gameId, data.playerName, data.pwd);
         });
     }
+    /**
+     * 执行gm指令
+     * @date 2020-10-10
+     * @route POST /game/local/gmcommand
+     * @group game - 活动管理器
+     * @param {string} gameId.query.required - 玩家id
+     * @param {string} token.query.required - token
+     * @param {string} cmd.query.required - cmd
+     * @returns {{ code: number}} 0 - 操作结果
+     */
+    gmcommand(param) {
+        if (mx_tool_1.ConfigMgr.get("gm", false)) {
+            return gameRPC_1.gameRPC.inst.gmCommand(param.gameId, param.token, param.cmd);
+        }
+        else {
+            throw ({ code: defines_1.ErrorCode.param_error, errMsg: `GM指令仅仅支持在开发中使用!` });
+        }
+    }
 };
 __decorate([
     mx_webserve_1.WebRouteModule.route(),
     mx_webserve_1.WebRouteModule.paramRequired("name", "string", true),
     mx_webserve_1.WebRouteModule.paramRequired("pwd", "string", true)
 ], _.prototype, "login", null);
+__decorate([
+    mx_webserve_1.WebRouteModule.paramRequired("gameId", "string", true),
+    mx_webserve_1.WebRouteModule.paramRequired("token", "string", true),
+    mx_webserve_1.WebRouteModule.paramRequired("cmd", "string", true),
+    mx_webserve_1.WebRouteModule.route()
+], _.prototype, "gmcommand", null);
 _ = __decorate([
     mx_webserve_1.WebRouteModule.class(module)
 ], _);

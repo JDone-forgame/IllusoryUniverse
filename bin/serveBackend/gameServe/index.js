@@ -36,6 +36,19 @@ let game = class game {
     bcRemoveRole(gameId) {
         gamerole_1.GameRoleService.removeRole(gameId);
     }
+    /**
+     * gm指令
+     * @route request gmCommand
+     * @group game - 活动管理器
+     * @key gameId
+     * @param {string} gameId.query.required - 玩家id
+     * @param {string} token.query.required - token
+     * @param {string} cmd.query.required - 参数
+     * @returns {{ code: number}} 0 - 登陆信息
+     */
+    gmCommand(gameId, token, cmd) {
+        return gamerole_1.GameRoleService.gmCommand(gameId, token, cmd);
+    }
 };
 __decorate([
     mx_rpc_1.RPCHandle.init()
@@ -46,6 +59,9 @@ __decorate([
 __decorate([
     mx_rpc_1.RPCHandle.route()
 ], game.prototype, "bcRemoveRole", null);
+__decorate([
+    mx_rpc_1.RPCHandle.route()
+], game.prototype, "gmCommand", null);
 game = __decorate([
     mx_rpc_1.RPCHandle.class('game', module)
 ], game);

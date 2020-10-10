@@ -44,6 +44,22 @@ class localgameRPC extends nodesocket_1.RequestRPC {
         let body = {};
         return this.request("broadcast", "bcRemoveRole", Object.assign(query, body), "gameId".split(","), "gameId");
     }
+    /**
+     *
+gm指令
+     * @param {string} gameId 玩家id
+     * @param {string} token token
+     * @param {string} cmd 参数
+     */
+    gmCommand(gameId, token, cmd) {
+        let query = {
+            gameId: gameId,
+            token: token,
+            cmd: cmd
+        };
+        let body = {};
+        return this.request("request", "gmCommand", Object.assign(query, body), "gameId,token,cmd".split(","), "gameId");
+    }
 }
 class gameRPC {
     static rpc_init(srv) {

@@ -12,7 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UnitRole = void 0;
 const mx_database_1 = require("mx-database");
 const defines_1 = require("../../../defines/defines");
+const interface_1 = require("../../../defines/interface");
 const logger_1 = require("../../../lib/logger");
+const TableMgr_1 = require("../../../lib/TableMgr");
 const gameRPC_1 = require("../../../rpcs/gameRPC");
 class UnitRole {
     static init() {
@@ -228,6 +230,32 @@ class UnitRole {
             return false;
         this.gameIdMap.delete(t_info.gameId);
         return true;
+    }
+    // 更新道具数量
+    updateItemCount(itemId, newCount) {
+        let itemRes = TableMgr_1.TableMgr.inst.getItemInfo(itemId);
+        if (!itemRes)
+            return { code: defines_1.ErrorCode.ok };
+        if (itemRes.eItemType != interface_1.SeEnumItemeItemType.WaiBuDaoJu) {
+            let items = this.dbInfo.get('playerItems') || {};
+            items[itemId] = newCount;
+            this.dbInfo.set('playerItems', items);
+        }
+        else {
+            // 如果是平台物品则直接通知平台
+            // PlatformNet.sendItem(this.gameId, itemId, newCount, this.uid, this.activityId);
+        }
+        return { code: defines_1.ErrorCode.ok };
+    }
+    // 获取道具数量
+    getItemCount(itemId) {
+        // let items = this.dbInfo.get('playerItems') || {};
+        // 如果道具是体力，刷新下体力值
+        // if (itemId == UnitRole.STRENGTH_ITEM_ID) {
+        //     this.updateStrength(items[itemId] || 0);
+        // }
+        let newItems = this.dbInfo.get('playerItems') || {};
+        return newItems[itemId] || 0;
     }
 }
 exports.UnitRole = UnitRole;

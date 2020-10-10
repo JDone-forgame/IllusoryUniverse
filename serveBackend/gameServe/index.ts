@@ -38,4 +38,19 @@ class game {
         GameRoleService.removeRole(gameId);
     }
 
+    /**
+     * gm指令
+     * @route request gmCommand
+     * @group game - 活动管理器
+     * @key gameId
+     * @param {string} gameId.query.required - 玩家id
+     * @param {string} token.query.required - token
+     * @param {string} cmd.query.required - 参数
+     * @returns {{ code: number}} 0 - 登陆信息
+     */
+   @RPCHandle.route()
+   gmCommand(gameId: string, token: string, cmd: string) {
+       return GameRoleService.gmCommand(gameId, token, cmd)
+   }
+
 }

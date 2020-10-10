@@ -2,7 +2,9 @@ import { MongodbMoudle, ReHash } from "mx-database";
 import { LocalDate } from "mx-tool";
 import { DBDefine, ErrorCode } from "../../../defines/defines";
 import { ifMailInfo, ifTaskInfo, ifUnitRole } from "../../../defines/gamerole";
+import { SeEnumItemeItemType } from "../../../defines/interface";
 import { LoggerMoudle } from "../../../lib/logger";
+import { TableMgr } from "../../../lib/TableMgr";
 import { gameRPC } from "../../../rpcs/gameRPC";
 
 export class UnitRole {
@@ -255,6 +257,35 @@ export class UnitRole {
 
         this.gameIdMap.delete(t_info.gameId);
         return true;
+    }
+
+    // 更新道具数量
+    updateItemCount(itemId: string, newCount: number) {
+        let itemRes = TableMgr.inst.getItemInfo(itemId)
+        if (!itemRes) return { code: ErrorCode.ok };
+
+        if (itemRes.eItemType != SeEnumItemeItemType.WaiBuDaoJu) {
+            let items = this.dbInfo.get('playerItems') || {};
+            items[itemId] = newCount;
+            this.dbInfo.set('playerItems', items);
+        } else {
+            // 如果是平台物品则直接通知平台
+            // PlatformNet.sendItem(this.gameId, itemId, newCount, this.uid, this.activityId);
+        }
+
+        return { code: ErrorCode.ok }
+    }   
+    
+    // 获取道具数量
+    getItemCount(itemId: string): number {
+        // let items = this.dbInfo.get('playerItems') || {};
+        // 如果道具是体力，刷新下体力值
+        // if (itemId == UnitRole.STRENGTH_ITEM_ID) {
+        //     this.updateStrength(items[itemId] || 0);
+        // }
+
+        let newItems = this.dbInfo.get('playerItems') || {};
+        return newItems[itemId] || 0;
     }
 
 

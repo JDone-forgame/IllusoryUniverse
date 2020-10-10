@@ -45,6 +45,26 @@ class localgameRPC extends RequestRPC {
 	
 	    return this.request<any>("broadcast", "bcRemoveRole", Object.assign(query, body),"gameId".split(","),"gameId")
 	}
+	/**
+	 * 
+gm指令
+	 * @param {string} gameId 玩家id
+	 * @param {string} token token
+	 * @param {string} cmd 参数
+	 */
+	gmCommand(gameId: string, token: string, cmd: string):Promise<{code: number}> {
+	    let query = {
+			gameId: gameId,
+			token: token,
+			cmd: cmd
+	    }
+	
+	    let body = {
+	
+	    }
+	
+	    return this.request<any>("request", "gmCommand", Object.assign(query, body),"gameId,token,cmd".split(","),"gameId")
+	}
 }
 
 export class gameRPC {

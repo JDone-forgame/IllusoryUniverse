@@ -13,6 +13,7 @@ exports.GameRoleService = void 0;
 const crypto_1 = require("crypto");
 const mx_tool_1 = require("mx-tool");
 const defines_1 = require("../../../defines/defines");
+const TableMgr_1 = require("../../../lib/TableMgr");
 const role_1 = require("./role");
 class GameRoleService {
     static init() {
@@ -53,7 +54,7 @@ class GameRoleService {
             }
             catch (e) {
                 console.error('_loadSucc', e);
-                throw { code: defines_1.ErrorCode.db_error, errMsg: "db is error" };
+                throw { code: defines_1.ErrorCode.db_error, errMsg: '连接数据库失败' };
             }
             // 登录前的流程处理
             yield role.beforeLogin();
@@ -63,9 +64,10 @@ class GameRoleService {
             return { code: defines_1.ErrorCode.ok, role: roleInfo, token: token, localTime: mx_tool_1.LocalDate.now() };
         });
     }
+    // 登录后操作
     static afterLogin(role) {
         // 清空奖励领取信息
-        // role.clearSigninAwardInfo();
+        // role.clearSigninAwardInfo()
         // 更新玩家登录时间
         role.lastActivityTime = mx_tool_1.LocalDate.now();
         // 新号标记
@@ -77,6 +79,41 @@ class GameRoleService {
     // 删除角色
     static removeRole(gameId) {
         role_1.UnitRole.del(gameId);
+    }
+    // 执行管理命令
+    static gmCommand(gameId, token, cmd) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // 获取角色
+            let ret = yield role_1.UnitRole.getRole(gameId, token);
+            if (!ret) {
+                return Promise.reject({ code: defines_1.ErrorCode.role_no, errMsg: "未找到该角色!" });
+            }
+            // 拆分指令码
+            // ' addItem | breath | 10 '
+            let cmdArr = cmd.split('|');
+            if (cmdArr.length < 2) {
+                return Promise.reject({ code: defines_1.ErrorCode.gm_tool_execute_error, errMsg: "指令格式不对!" });
+            }
+            let role = ret.role;
+            let optName = cmdArr[0];
+            let tarName = cmdArr[1];
+            let tarCount = parseInt(cmdArr[2]) || 0;
+            switch (optName) {
+                // 增加物品
+                case 'addItem': {
+                    let itemInfo = TableMgr_1.TableMgr.inst.getItemInfo(tarName);
+                    // if (!itemInfo) {
+                    //     return Promise.reject({ code: ErrorCode.gm_tool_execute_error, errMsg: "没有该物品!" })
+                    // }
+                    // 更新物品数量
+                    role.updateItemCount(tarName, role.getItemCount(tarName) + tarCount);
+                    break;
+                }
+                default:
+                    return Promise.reject({ code: defines_1.ErrorCode.gm_tool_execute_error, errMsg: "指令异常！" });
+            }
+            return Promise.resolve({ code: defines_1.ErrorCode.ok, itemName: tarName, itemCount: role.getItemCount(tarName), items: role.playerItems });
+        });
     }
 }
 exports.GameRoleService = GameRoleService;
