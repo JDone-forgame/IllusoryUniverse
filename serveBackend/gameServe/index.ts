@@ -48,9 +48,23 @@ class game {
      * @param {string} cmd.query.required - 参数
      * @returns {{ code: number}} 0 - 登陆信息
      */
-   @RPCHandle.route()
-   gmCommand(gameId: string, token: string, cmd: string) {
-       return GameRoleService.gmCommand(gameId, token, cmd)
-   }
+    @RPCHandle.route()
+    gmCommand(gameId: string, token: string, cmd: string) {
+        return GameRoleService.gmCommand(gameId, token, cmd)
+    }
+
+    /**
+     * 读取玩家信息
+     * @route request loadPlayerInfo
+     * @group game - 活动管理器
+     * @key gameId
+     * @param {string} gameId.query.required - 玩家id
+     * @param {string} token.query.required - token
+     * @returns {{ code: number}} 0 - 登陆信息
+     */
+    @RPCHandle.route()
+    loadPlayerInfo(gameId: string, token: string ) {
+        return GameRoleService.loadPlayerInfo(gameId, token )
+    }
 
 }

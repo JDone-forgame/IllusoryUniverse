@@ -60,6 +60,20 @@ gm指令
         let body = {};
         return this.request("request", "gmCommand", Object.assign(query, body), "gameId,token,cmd".split(","), "gameId");
     }
+    /**
+     *
+读取玩家信息
+     * @param {string} gameId 玩家id
+     * @param {string} token token
+     */
+    loadPlayerInfo(gameId, token) {
+        let query = {
+            gameId: gameId,
+            token: token
+        };
+        let body = {};
+        return this.request("request", "loadPlayerInfo", Object.assign(query, body), "gameId,token".split(","), "gameId");
+    }
 }
 class gameRPC {
     static rpc_init(srv) {

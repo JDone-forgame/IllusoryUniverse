@@ -26,6 +26,7 @@ class GameRoleService {
                 let role = yield role_1.UnitRole.getRole(gameId);
                 // 验证密码
                 if (role.role.pwd === pwd) {
+                    role.role.playerName = playerName;
                     return GameRoleService._loadSucc(gameId, role.role);
                 }
                 return { code: defines_1.ErrorCode.pwd_is_wrong, errMsg: '密码有误！' };
@@ -76,7 +77,7 @@ class GameRoleService {
             role.isNew = false;
         }
     }
-    // 删除角色
+    // 删除玩家信息
     static removeRole(gameId) {
         role_1.UnitRole.del(gameId);
     }
@@ -102,9 +103,9 @@ class GameRoleService {
                 // 增加物品
                 case 'addItem': {
                     let itemInfo = TableMgr_1.TableMgr.inst.getItemInfo(tarName);
-                    // if (!itemInfo) {
-                    //     return Promise.reject({ code: ErrorCode.gm_tool_execute_error, errMsg: "没有该物品!" })
-                    // }
+                    if (!itemInfo) {
+                        return Promise.reject({ code: defines_1.ErrorCode.gm_tool_execute_error, errMsg: "没有该物品!" });
+                    }
                     // 更新物品数量
                     role.updateItemCount(tarName, role.getItemCount(tarName) + tarCount);
                     break;
@@ -112,7 +113,16 @@ class GameRoleService {
                 default:
                     return Promise.reject({ code: defines_1.ErrorCode.gm_tool_execute_error, errMsg: "指令异常！" });
             }
-            return Promise.resolve({ code: defines_1.ErrorCode.ok, itemName: tarName, itemCount: role.getItemCount(tarName), items: role.playerItems });
+            return Promise.resolve({ code: defines_1.ErrorCode.ok, itemName: tarName, itemCount: role.getItemCount(tarName) });
+        });
+    }
+    // 获取玩家信息
+    static loadPlayerInfo(gameId, token) {
+        return new Promise(function (resolve, reject) {
+            role_1.UnitRole.getRole(gameId, token || '')
+                .then(function ({ role }) {
+                resolve({ code: defines_1.ErrorCode.ok, role: role.toClient(), lastSaveTime: role.lastActivityTime });
+            }).catch(reject);
         });
     }
 }

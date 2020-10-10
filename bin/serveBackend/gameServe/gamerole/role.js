@@ -34,6 +34,9 @@ class UnitRole {
     get playerName() {
         return this.dbInfo.get('playerName') || '';
     }
+    set playerName(v) {
+        this.dbInfo.set('playerName', v);
+    }
     get pwd() {
         return this.dbInfo.get('pwd') || '';
     }
@@ -197,7 +200,7 @@ class UnitRole {
         return new Promise(function (resolve, reject) {
             mx_database_1.MongodbMoudle.get_database(defines_1.DBDefine.db)
                 .update_insert(defines_1.DBDefine.col_role, { _id: gameId }, {
-                playName: playerName,
+                playerName: playerName,
                 pwd: pwd,
                 gameId: gameId,
             })

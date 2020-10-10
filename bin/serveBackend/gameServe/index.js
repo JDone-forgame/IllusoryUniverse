@@ -49,6 +49,18 @@ let game = class game {
     gmCommand(gameId, token, cmd) {
         return gamerole_1.GameRoleService.gmCommand(gameId, token, cmd);
     }
+    /**
+     * 读取玩家信息
+     * @route request loadPlayerInfo
+     * @group game - 活动管理器
+     * @key gameId
+     * @param {string} gameId.query.required - 玩家id
+     * @param {string} token.query.required - token
+     * @returns {{ code: number}} 0 - 登陆信息
+     */
+    loadPlayerInfo(gameId, token) {
+        return gamerole_1.GameRoleService.loadPlayerInfo(gameId, token);
+    }
 };
 __decorate([
     mx_rpc_1.RPCHandle.init()
@@ -62,6 +74,9 @@ __decorate([
 __decorate([
     mx_rpc_1.RPCHandle.route()
 ], game.prototype, "gmCommand", null);
+__decorate([
+    mx_rpc_1.RPCHandle.route()
+], game.prototype, "loadPlayerInfo", null);
 game = __decorate([
     mx_rpc_1.RPCHandle.class('game', module)
 ], game);

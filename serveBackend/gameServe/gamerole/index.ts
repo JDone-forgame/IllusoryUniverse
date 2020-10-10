@@ -76,7 +76,7 @@ export class GameRoleService {
         }
     }
 
-    // 删除角色
+    // 删除玩家信息
     static removeRole(gameId: string) {
         UnitRole.del(gameId)
     }
@@ -117,6 +117,16 @@ export class GameRoleService {
                 return Promise.reject({ code: ErrorCode.gm_tool_execute_error, errMsg: "指令异常！" })
         }
         return Promise.resolve({ code: ErrorCode.ok, itemName: tarName, itemCount: role.getItemCount(tarName) })
+    }
+
+    // 获取玩家信息
+    static loadPlayerInfo(gameId: string, token: string): Promise<{ code: number, role: any, lastSaveTime: number }> {
+        return new Promise(function (resolve, reject) {
+            UnitRole.getRole(gameId, token || '')
+                .then(function ({ role }) {
+                    resolve({ code: ErrorCode.ok, role: role.toClient(), lastSaveTime: role.lastActivityTime })
+                }).catch(reject)
+        })
     }
 
 }

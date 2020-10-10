@@ -45,20 +45,33 @@ let _ = class _ {
     /**
      * 执行gm指令
      * @date 2020-10-10
-     * @route POST /game/local/gmcommand
+     * @route POST /game/local/gmCommand
      * @group game - 活动管理器
      * @param {string} gameId.query.required - 玩家id
      * @param {string} token.query.required - token
      * @param {string} cmd.query.required - cmd
      * @returns {{ code: number}} 0 - 操作结果
      */
-    gmcommand(param) {
+    gmCommand(param) {
         if (mx_tool_1.ConfigMgr.get("gm", false)) {
             return gameRPC_1.gameRPC.inst.gmCommand(param.gameId, param.token, param.cmd);
         }
         else {
             throw ({ code: defines_1.ErrorCode.param_error, errMsg: `GM指令仅仅支持在开发中使用!` });
         }
+    }
+    /**
+     * 读取玩家信息
+     * @date 2020-10-10
+     * @route POST /game/local/loadPlayerInfo
+     * @group game - 活动管理器
+     * @param {string} gameId.query.required - 玩家id
+     * @param {string} token.query.required - token
+     * @param {string} cmd.query.required - cmd
+     * @returns {{ code: number}} 0 - 操作结果
+     */
+    loadPlayerInfo(param) {
+        return gameRPC_1.gameRPC.inst.loadPlayerInfo(param.gameId, param.token);
     }
 };
 __decorate([
@@ -71,7 +84,12 @@ __decorate([
     mx_webserve_1.WebRouteModule.paramRequired("token", "string", true),
     mx_webserve_1.WebRouteModule.paramRequired("cmd", "string", true),
     mx_webserve_1.WebRouteModule.route()
-], _.prototype, "gmcommand", null);
+], _.prototype, "gmCommand", null);
+__decorate([
+    mx_webserve_1.WebRouteModule.paramRequired("gameId", "string", true),
+    mx_webserve_1.WebRouteModule.paramRequired("token", "string", true),
+    mx_webserve_1.WebRouteModule.route()
+], _.prototype, "loadPlayerInfo", null);
 _ = __decorate([
     mx_webserve_1.WebRouteModule.class(module)
 ], _);

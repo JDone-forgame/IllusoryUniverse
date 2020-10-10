@@ -65,6 +65,24 @@ gm指令
 	
 	    return this.request<any>("request", "gmCommand", Object.assign(query, body),"gameId,token,cmd".split(","),"gameId")
 	}
+	/**
+	 * 
+读取玩家信息
+	 * @param {string} gameId 玩家id
+	 * @param {string} token token
+	 */
+	loadPlayerInfo(gameId: string, token: string):Promise<{code: number}> {
+	    let query = {
+			gameId: gameId,
+			token: token
+	    }
+	
+	    let body = {
+	
+	    }
+	
+	    return this.request<any>("request", "loadPlayerInfo", Object.assign(query, body),"gameId,token".split(","),"gameId")
+	}
 }
 
 export class gameRPC {
