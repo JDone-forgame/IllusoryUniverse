@@ -1,12 +1,14 @@
 {
     "id": "IU",
+    "channel":"HJ",
     "Swagger": true,
     "web": {
-        "port": 20620
+        "port": 11090
     },
     "db": {
         "database": "IllusoryUniverse",
-        "host": "",
-        "port": 10620
-    }
+        "host": "10.0.0.10",
+        "port": 27017
+    },
+    "host":"127.0.0.1:11090"
 }

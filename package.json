@@ -4,7 +4,7 @@
   "description": "this is a game",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "生成RPC": "npx mx-rpc-creator -t nodesocket -o ./rpcs/ -d ../defines/ ./serveBackend ./serveFrontend/webServe/app"
   },
   "repository": {
     "type": "git",
@@ -17,7 +17,18 @@
   },
   "homepage": "https://github.com/JDone-forgame/IllusoryUniverse#readme",
   "devDependencies": {
-    "@types/node": "^14.11.2",
-    "ts-node": "^9.0.0"
+    "@types/node": "^14.0.27",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.7"
+  },
+  "dependencies": {
+    "express-swagger-generator": "^1.1.17",
+    "mx-database": "^1.0.8",
+    "mx-logger": "^1.0.9",
+    "mx-resource": "^1.0.2",
+    "mx-rpc": "^1.1.0",
+    "mx-tool": "^1.0.9",
+    "mx-webserve": "^1.1.9",
+    "node-cache": "^5.1.2"
   }
 }

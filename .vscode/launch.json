@@ -7,11 +7,32 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "启动程序",
+            "name": "启动项目",
+            "console": "integratedTerminal",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}\\index.ts",
+            "args": [
+                "${workspaceFolder}/app/all.json"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/bin/**/*.js"
+            ]
+        },
+
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "TS编译",
+            "console": "integratedTerminal",
+            "runtimeArgs": [
+                "--nolazy",
+                "-r",
+                "ts-node/register"
+            ],
+            "args": ["app/start","app/all.json"],
             "skipFiles": [
                 "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}\\index.js"
+            ]
         }
     ]
 }
