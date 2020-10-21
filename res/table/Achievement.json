@@ -1,0 +1,16 @@
+{
+    "0":{
+        "sID":101,
+        "eType":"IU_ZhuXian",
+        "asDescribe":"主线任务：在一块地上放置建筑",
+        "aiCondition":"1",
+        "asGiftitems":"k1,10"
+    },
+    "1":{
+        "sID":102,
+        "eType":"IU_ZhuXian",
+        "asDescribe":"主线任务：产生一个修真者",
+        "aiCondition":"1",
+        "asGiftitems":"k1,20"
+    }
+}

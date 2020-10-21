@@ -1,8 +1,6 @@
 import { createHash } from "crypto";
 import { LocalDate } from "mx-tool";
 import { ErrorCode } from "../../../defines/defines";
-import { SeResItem } from "../../../defines/interface";
-import { TableMgr } from "../../../lib/TableMgr";
 import { UnitRole } from "./role";
 
 export class GameRoleService {
@@ -103,10 +101,7 @@ export class GameRoleService {
         switch (optName) {
             // 增加物品
             case 'addItem': {
-                let itemInfo: SeResItem = TableMgr.inst.getItemInfo(tarName)
-                if (!itemInfo) {
-                    return Promise.reject({ code: ErrorCode.gm_tool_execute_error, errMsg: "没有该物品!" })
-                }
+                // 判断有无此物品
 
                 // 更新物品数量
                 role.updateItemCount(tarName, role.getItemCount(tarName) + tarCount)
@@ -128,5 +123,8 @@ export class GameRoleService {
                 }).catch(reject)
         })
     }
+
+    // 成就相关
+    // 
 
 }

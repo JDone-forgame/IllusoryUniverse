@@ -4,6 +4,7 @@ export var DBDefine = {
     db: ConfigMgr.get('db.database') || "IllusoryUniverse",
     col_role: 'roles',
     col_task: 'tasks',
+    col_achievement: 'achievement',
     col_mail: 'mails',
     col_board: "board",
     col_friend: "friend",

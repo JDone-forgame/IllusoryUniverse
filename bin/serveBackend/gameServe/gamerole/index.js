@@ -13,7 +13,6 @@ exports.GameRoleService = void 0;
 const crypto_1 = require("crypto");
 const mx_tool_1 = require("mx-tool");
 const defines_1 = require("../../../defines/defines");
-const TableMgr_1 = require("../../../lib/TableMgr");
 const role_1 = require("./role");
 class GameRoleService {
     static init() {
@@ -26,7 +25,6 @@ class GameRoleService {
                 let role = yield role_1.UnitRole.getRole(gameId);
                 // 验证密码
                 if (role.role.pwd === pwd) {
-                    role.role.playerName = playerName;
                     return GameRoleService._loadSucc(gameId, role.role);
                 }
                 return { code: defines_1.ErrorCode.pwd_is_wrong, errMsg: '密码有误！' };
@@ -102,10 +100,7 @@ class GameRoleService {
             switch (optName) {
                 // 增加物品
                 case 'addItem': {
-                    let itemInfo = TableMgr_1.TableMgr.inst.getItemInfo(tarName);
-                    if (!itemInfo) {
-                        return Promise.reject({ code: defines_1.ErrorCode.gm_tool_execute_error, errMsg: "没有该物品!" });
-                    }
+                    // 判断有无此物品
                     // 更新物品数量
                     role.updateItemCount(tarName, role.getItemCount(tarName) + tarCount);
                     break;

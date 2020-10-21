@@ -1,8 +1,7 @@
 import { MongodbMoudle, ReHash } from "mx-database";
-import { LocalDate } from "mx-tool";
 import { DBDefine, ErrorCode } from "../../../defines/defines";
-import { ifMailInfo, ifTaskInfo, ifUnitRole } from "../../../defines/gamerole";
-import { SeEnumItemeItemType } from "../../../defines/interface";
+import { ifAchievementInfo, ifMailInfo, ifTaskInfo, ifUnitRole } from "../../../defines/gamerole";
+import { SeEnumAchievementeType, SeResAchievement } from "../../../defines/interface";
 import { LoggerMoudle } from "../../../lib/logger";
 import { TableMgr } from "../../../lib/TableMgr";
 import { gameRPC } from "../../../rpcs/gameRPC";
@@ -15,6 +14,7 @@ export class UnitRole {
     private static gameIdMap: Map<string, UnitRole> = new Map();
 
     dbInfo!: ReHash<{ [key: string]: (string | number | object) }>;
+    achievementInfos !: ReHash<{ [acId: string]: ifAchievementInfo }>;
     taskInfos !: ReHash<{ [taskId: string]: ifTaskInfo }>;
     mailInfos!: ifMailInfo[];
 
@@ -34,7 +34,7 @@ export class UnitRole {
         return this.dbInfo.get('playerName') || '';
     }
 
-    set playerName(v: string){
+    set playerName(v: string) {
         this.dbInfo.set('playerName', v);
     }
 
@@ -46,7 +46,7 @@ export class UnitRole {
         return this.dbInfo.get('gameId') || '';
     }
 
-    set gameId(v: string){
+    set gameId(v: string) {
         this.dbInfo.set('gameId', v);
     }
 
@@ -54,7 +54,7 @@ export class UnitRole {
         return this.dbInfo.get('breath') || 0;
     }
 
-    set breath(v: number){
+    set breath(v: number) {
         this.dbInfo.set('breath', v);
     }
 
@@ -111,15 +111,25 @@ export class UnitRole {
     toClient() {
 
         let loginInfo: ifUnitRole = {
+            // 玩家姓名
             playerName: this.playerName,
+            // 玩家密码
             pwd: this.pwd,
+            // gameId
             gameId: this.gameId,
+            // 是否是新手
             isNewPlayer: this.isNew,
+            // 是否是创世神
             isCreatorGod: false,
+            // 任务列表
             task: this.taskListArray,
+            // 邮件列表
             mail: this.mailInfos,
+            // 玩家道具
             items: this.playerItems || {},
+            // 氤氲元魂
             breath: this.breath || 0,
+            // 上次活跃的时间
             lastActivityTime: this.lastActivityTime,
         }
 
@@ -133,7 +143,7 @@ export class UnitRole {
                 return { code: ErrorCode.ok, role: this.gameIdMap.get(gameId) as UnitRole };
             }
             else {
-                throw ({ code: ErrorCode.role_token_error });
+                throw ({ code: ErrorCode.role_token_error, errMsg: 'token 错误' });
             }
         }
 
@@ -151,10 +161,10 @@ export class UnitRole {
                             resolve({ code: ErrorCode.ok, role: UnitRole.get(gameId) });
                         }
                         else {
-                            reject({ code: ErrorCode.role_token_error });
+                            reject({ code: ErrorCode.role_token_error, errMsg: 'token 错误' });
                         }
                     }).catch(function () {
-                        reject({ code: ErrorCode.role_token_error });
+                        reject({ code: ErrorCode.role_token_error, errMsg: 'token 错误' });
                     });
 
                 }
@@ -222,7 +232,7 @@ export class UnitRole {
 
         return new Promise(function (resolve, reject) {
             MongodbMoudle.get_database(DBDefine.db)
-                .update_insert(DBDefine.col_role, { _id: gameId }, 
+                .update_insert(DBDefine.col_role, { _id: gameId },
                     {
                         playerName: playerName,
                         pwd: pwd,
@@ -236,7 +246,7 @@ export class UnitRole {
 
                         // 保存注册日志
                         LoggerMoudle.roleRegist(gameId, playerName, pwd);
-                        
+
                         resolve(rs);
                     }).catch(reject);
                 }).catch(reject)
@@ -265,21 +275,17 @@ export class UnitRole {
 
     // 更新道具数量
     updateItemCount(itemId: string, newCount: number) {
-        let itemRes = TableMgr.inst.getItemInfo(itemId)
-        if (!itemRes) return { code: ErrorCode.ok };
 
-        if (itemRes.eItemType != SeEnumItemeItemType.WaiBuDaoJu) {
-            let items = this.dbInfo.get('playerItems') || {};
-            items[itemId] = newCount;
-            this.dbInfo.set('playerItems', items);
-        } else {
-            // 如果是平台物品则直接通知平台
-            // PlatformNet.sendItem(this.gameId, itemId, newCount, this.uid, this.activityId);
-        }
+        let items = this.dbInfo.get('playerItems') || {};
+        items[itemId] = newCount;
+        this.dbInfo.set('playerItems', items);
+
+        // 如果是平台物品则直接通知平台
+        // PlatformNet.sendItem(this.gameId, itemId, newCount, this.uid, this.activityId);    
 
         return { code: ErrorCode.ok }
-    }   
-    
+    }
+
     // 获取道具数量
     getItemCount(itemId: string): number {
         // let items = this.dbInfo.get('playerItems') || {};
@@ -292,5 +298,193 @@ export class UnitRole {
         return newItems[itemId] || 0;
     }
 
+    // 获取成就数据列表
+    get achievementDataList(): ifAchievementInfo[] {
+        // 初始化成就数据
+        this.initAchievementData();
+
+        // 包含各个成就状态信息的数组
+        let retArray: ifAchievementInfo[] = [];
+        let v = this.achievementInfos.value;
+        for (let key in v) {
+            retArray.push(v[key]);
+        }
+        return retArray;
+    }
+
+    // 初始化成就数据，完成返回真
+    initAchievementData(): boolean {
+        let updated: boolean = false;
+        // 读取表中所有成就
+        let allAchievementRes: { [key: string]: SeResAchievement } = TableMgr.inst.getAllAchievementRes();
+
+        for (let key in allAchievementRes) {
+            // 匹配成就
+            let acRes: SeResAchievement = allAchievementRes[key];
+            updated = this.checkAndUpdateAchievementData(acRes, 0);
+        }
+
+        return updated;
+    }
+
+    // 检查并更新成就数据
+    private checkAndUpdateAchievementData(acRes: SeResAchievement, updateVal: number): boolean {
+        let acId: string = acRes.sID;
+        let roleAcDatas = this.achievementInfos.value;
+
+        let needSaveDB: boolean = false;
+
+        let curAcData: ifAchievementInfo = roleAcDatas[acId];
+        // 新增成就数据
+        if (!curAcData) {
+            curAcData = { acId: acId, completeVaule: 0, awardStages: [] };
+            needSaveDB = true;
+        }
+
+        if (!curAcData) {
+            // 理论上不应该出现
+            return needSaveDB;
+        }
+
+        let updated: boolean = false;
+
+        // 更新已经完成的次数
+        updated = this.updateAchievementCompleteValue(curAcData, acRes, updateVal);
+        if (updated) {
+            needSaveDB = true;
+        }
+
+        if (needSaveDB) {
+            this.achievementInfos.set(acId.toString(), curAcData);
+        }
+
+        return needSaveDB;
+    }
+
+    // 更新成就完成次数
+    private updateAchievementCompleteValue(acData: ifAchievementInfo, acRes: SeResAchievement, updateVal: number): boolean {
+        let updated: boolean = false;
+        
+        if (updateVal <= 0) {
+            return updated;
+        }
+
+        switch (acRes.eType) {
+            case SeEnumAchievementeType.IU_FenZhi:
+                acData.completeVaule += updateVal;
+                updated = true;
+                break;
+            case SeEnumAchievementeType.IU_ZhuXian:
+                acData.completeVaule += updateVal;
+                updated = true;
+                break;
+        }
+
+        return updated;
+    }
+
+    // 按成就类型触发更新成就信息
+    TriggerCheckAchievementByType(achievementType: SeEnumAchievementeType, updateVal: number) {
+        // 获取指定类型成就配置信息
+        let acResList: SeResAchievement[] = TableMgr.inst.getAchievementResByType(achievementType);
+        if (acResList.length <= 0) {
+            return;
+        }
+
+        for (let i: number = 0; i < acResList.length; ++i) {
+            let acRes = acResList[i];
+            if (acRes.eType !== achievementType) {
+                continue;
+            }
+            this.updateAchievement(acResList[i], updateVal);
+        }
+    }
+
+    private updateAchievement(acRes: SeResAchievement, updateVal: number): boolean {
+        let updated = this.checkAndUpdateAchievementData(acRes, updateVal);
+        return updated;
+    }
+
+    // 加载/初始化成就列表
+    async loadAchievement() {
+        const v = await MongodbMoudle.get_database(DBDefine.db).get_unit<{ [acId: string]: ifAchievementInfo }>(DBDefine.col_achievement, { _id: this.gameId }).load();
+        this.achievementInfos = v;
+    }
+
+    // 获取成就列表[返给客户端用的]
+    async getAchievementList(): Promise<ifAchievementInfo[]> {
+        if (!this.achievementInfos) {
+            await this.loadAchievement();
+        }
+
+        let retList: ifAchievementInfo[] = this.achievementDataList;
+
+        return retList;
+    }
+
+    // 领取成就奖励
+    async getAchievementAward(acId: string, stage: number) {
+        if (!this.achievementInfos) {
+            await this.loadAchievement();
+        }
+
+        // 获取成就配置信息
+        let acRes: SeResAchievement = TableMgr.inst.getAchievementResById(acId);
+        if (!acRes) {
+            throw { code: ErrorCode.achievement_table_res_fail, errMsg: 'achievement table res fail' }
+        }
+
+        // 检查是否存在对应的阶段
+        let stageCondition = TableMgr.inst.getAchievementStageCondition(acRes, stage);
+        if (stageCondition < 0) {
+            throw { code: ErrorCode.achievement_invalid_stage, errMsg: 'achievement invalid stage' }
+        }
+
+        // 获取当前成就数据
+        let roleAcDatas = this.achievementInfos.value;
+        let curAcData: ifAchievementInfo = roleAcDatas[acId];
+        if (!curAcData) {
+            throw { code: ErrorCode.achievement_invalid_data, errMsg: 'achievement invalid data' }
+        }
+
+        // 检查是否已经领取对应的阶段奖励
+        for (let i = 0; i < curAcData.awardStages.length; ++i) {
+            let completeCondition = curAcData.awardStages[i];
+            if (completeCondition === stageCondition) {
+                // 说明已经领取过奖励了
+                throw { code: ErrorCode.achievement_repeat_award, errMsg: 'achievement repeat award' }
+            }
+        }
+
+        // 检查玩家是否已经达到领取条件
+        if (curAcData.completeVaule < stageCondition) {
+            throw { code: ErrorCode.achievement_not_complete, errMsg: 'achievement no complete' }
+        }
+
+        // 获取奖励物品列表
+        let awardItems: string[] = TableMgr.inst.getAchievementAwardItems(acRes, stage);
+        if (!awardItems || awardItems.length <= 0) {
+            throw { code: ErrorCode.achievement_table_res_fail, errMsg: 'achievement table res fail' }
+        }
+
+        // 更新成就数据
+        curAcData.awardStages.push(stageCondition);
+        this.achievementInfos.set(acId, curAcData);
+
+        // 下放奖励物品
+        for (let i = 0; i < awardItems.length; ++i) {
+            let awardItemString: string = awardItems[i];
+            let awardItem: Array<string> = awardItemString.split(',');
+            if (awardItem.length !== 2) {
+                continue;
+            }
+            let awardItemId = awardItem[0];
+            let awardItemCount = parseInt(awardItem[1]);
+            this.updateItemCount(awardItemId, this.getItemCount(awardItemId) + awardItemCount);
+        }
+
+        // 返回结果
+        return { code: ErrorCode.ok };
+    }
 
 }

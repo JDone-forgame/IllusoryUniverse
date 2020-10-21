@@ -18,6 +18,13 @@ export enum TaskStatus {
     Rewarded = 3,
 }
 
+// 成就信息
+export interface ifAchievementInfo {
+    acId: string;                   // 成就id
+    completeVaule: number;          // 完成值
+    awardStages: Array<number>;     // 已经领取奖励的阶段
+}
+
 export interface ifMailInfo {
     /** 邮件类型 */
     type: eMailType,

@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "express-swagger-generator": "^1.1.17",
-    "mx-database": "^1.0.8",
+    "mx-database": "^1.0.14",
     "mx-logger": "^1.0.9",
     "mx-resource": "^1.0.2",
     "mx-rpc": "^1.1.0",
