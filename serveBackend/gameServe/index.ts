@@ -1,5 +1,8 @@
 import { RPCHandle } from "mx-rpc";
+import { ErrorCode } from "../../defines/defines";
+import { AchievementService } from "./achievement";
 import { GameRoleService } from "./gamerole"
+import { TaskService } from "./task";
 
 @RPCHandle.class('game', module)
 class game {
@@ -63,8 +66,51 @@ class game {
      * @returns {{ code: number}} 0 - 登陆信息
      */
     @RPCHandle.route()
-    loadPlayerInfo(gameId: string, token: string ) {
-        return GameRoleService.loadPlayerInfo(gameId, token )
+    loadPlayerInfo(gameId: string, token: string) {
+        return GameRoleService.loadPlayerInfo(gameId, token)
+    }
+
+    /**
+    * 获取成就数据列表
+    * @route request getAchievementList
+    * @group game - 活动管理器
+    * @key gameId
+    * @param {string} gameId.query.required - 玩家id
+    * @param {string} token.query.required - token
+    * @returns {{code: ErrorCode}} 0 - 返回结果
+    */
+    @RPCHandle.route()
+    getAchievementList(gameId: string, token: string): Promise<{ code: ErrorCode }> {
+        return AchievementService.getAchievementList(gameId, token);
+    }
+
+    /**
+    * 获取任务列表
+    * @route request getTaskList
+    * @group game - 活动管理器
+    * @key gameId
+    * @param {string} gameId.query.required - 玩家id
+    * @param {string} token.query.required - token
+    * @returns {{code: ErrorCode}} 0 - 返回信息
+    */
+    @RPCHandle.route()
+    getTaskList(gameId: string, token: string) {
+        return TaskService.getTaskList(gameId, token);
+    }
+
+    /**
+     * 获取任务奖励
+     * @route request getTaskAward
+     * @group game - 活动管理器
+     * @key gameId
+     * @param {string} gameId.query.required - 玩家id
+     * @param {string} token.query.required - token
+     * @param {string} taskId.query.required - taskId
+     * @returns {{code: ErrorCode}} 0 - 返回信息
+     */
+    @RPCHandle.route()
+    getTaskAward(gameId: string, token: string, taskId: string) {
+        return TaskService.getTaskAward(gameId, token, taskId);
     }
 
 }

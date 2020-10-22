@@ -1,16 +1,1 @@
-{
-    "0":{
-        "sID":101,
-        "eType":"IU_ZhuXian",
-        "asDescribe":"主线任务：在一块地上放置建筑",
-        "aiCondition":"1",
-        "asGiftitems":"k1,10"
-    },
-    "1":{
-        "sID":102,
-        "eType":"IU_ZhuXian",
-        "asDescribe":"主线任务：产生一个修真者",
-        "aiCondition":"1",
-        "asGiftitems":"k1,20"
-    }
-}
+{"T101":{"sID":"T101","eType":0,"asDescribe":["完成1次主线任务","完成10次主线任务","完成20次主线任务","完成30次主线任务"],"aiCondition":[1,10,20,30],"asGiftitems":["k1,10","k1,10","k1,20","k1,600"]},"T201":{"sID":"T201","eType":0,"asDescribe":["完成1次分支任务","完成10次分支任务","完成20次分支任务","完成30次分支任务"],"aiCondition":[1,10,20,30],"asGiftitems":["k1,40","k1,40","k1,40","k1,40"]}}

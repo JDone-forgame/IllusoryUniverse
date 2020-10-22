@@ -3,9 +3,8 @@
  * 这是一个自动生成的文件,最好不要直接改动这个文件
  */
 
-import { ErrorCode } from "../defines/defines"
 import { RequestRPC } from "./nodesocket"
-
+import {ErrorCode} from "../defines/defines"
 
 
 class localgameRPC extends RequestRPC {
@@ -82,6 +81,62 @@ gm指令
 	    }
 	
 	    return this.request<any>("request", "loadPlayerInfo", Object.assign(query, body),"gameId,token".split(","),"gameId")
+	}
+	/**
+	 * 
+获取成就数据列表
+	 * @param {string} gameId 玩家id
+	 * @param {string} token token
+	 */
+	getAchievementList(gameId: string, token: string):Promise<{code: ErrorCode}> {
+	    let query = {
+			gameId: gameId,
+			token: token
+	    }
+	
+	    let body = {
+	
+	    }
+	
+	    return this.request<any>("request", "getAchievementList", Object.assign(query, body),"gameId,token".split(","),"gameId")
+	}
+	/**
+	 * 
+获取任务列表
+	 * @param {string} gameId 玩家id
+	 * @param {string} token token
+	 */
+	getTaskList(gameId: string, token: string):Promise<{code: ErrorCode}> {
+	    let query = {
+			gameId: gameId,
+			token: token
+	    }
+	
+	    let body = {
+	
+	    }
+	
+	    return this.request<any>("request", "getTaskList", Object.assign(query, body),"gameId,token".split(","),"gameId")
+	}
+	/**
+	 * 
+获取任务奖励
+	 * @param {string} gameId 玩家id
+	 * @param {string} token token
+	 * @param {string} taskId taskId
+	 */
+	getTaskAward(gameId: string, token: string, taskId: string):Promise<{code: ErrorCode}> {
+	    let query = {
+			gameId: gameId,
+			token: token,
+			taskId: taskId
+	    }
+	
+	    let body = {
+	
+	    }
+	
+	    return this.request<any>("request", "getTaskAward", Object.assign(query, body),"gameId,token,taskId".split(","),"gameId")
 	}
 }
 

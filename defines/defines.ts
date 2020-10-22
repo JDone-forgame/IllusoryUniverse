@@ -46,9 +46,11 @@ export enum ErrorCode {
 
     login_error = 10011,
 
-    // 任务
-    task_can_not_reward = 10031,
-    task_not_found = 10032,
+    // 任务相关
+    task_award_not_find_record = 10600,
+    task_invalid_res = 10601,
+    task_already_get_award = 10602,
+    task_award_uncomplete = 10603,
 
     // 主界面
     home_choppingboard_no_pos = 10080,

@@ -1,7 +1,7 @@
 
 import { ResourceModule } from "mx-resource";
 
-import { SeResAchievement, SeEnumAchievementeType } from "../defines/interface";
+import { SeResAchievement, SeEnumAchievementeType, SeResTask, SeEnumTaskeTaskType } from "../defines/interface";
 import { ConfigMgr } from "mx-tool";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -63,6 +63,7 @@ export class TableMgr {
      */
     public async init() {
         this._achievement = ResourceModule.watch<SeResAchievement>(PltFileList.get_plt_file("Achievement"));
+        this._task = ResourceModule.watch<SeResTask>(PltFileList.get_plt_file("Task"));
         return true;
     }
 
@@ -128,6 +129,29 @@ export class TableMgr {
         return awardItems;
     }
 
+    // 任务
+    private _task: ResourceModule<SeResTask>;
+    // 获取所有的任务列表
+    public getAllTaskRes(): { [key: string]: SeResTask } {
+        return this._task.getAllRes();
+    }
+    // 获取指定类型的任务
+    public getTaskInfoByType(nType: SeEnumTaskeTaskType): SeResTask[] {
+        let res: { [tkey: string]: SeResTask } = this._task.getAllRes();
+        let ret: SeResTask[] = []
+        for (let taskId in res) {
+            let taskInfo: SeResTask | undefined = res[taskId];
+            if (taskInfo && taskInfo.eTaskType == nType) {
+                ret.push(taskInfo);
+            }
+        }
 
+        return ret;
+    }
+
+    // 通过任务id获取任务信息
+    public getTaskResById(taskId: string): SeResTask {
+        return this._task.getRes(taskId) as SeResTask;
+    }
 
 }

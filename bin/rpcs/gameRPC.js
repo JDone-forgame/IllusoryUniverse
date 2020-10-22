@@ -74,6 +74,20 @@ gm指令
         let body = {};
         return this.request("request", "loadPlayerInfo", Object.assign(query, body), "gameId,token".split(","), "gameId");
     }
+    /**
+     *
+获取成就数据列表
+     * @param {string} gameId 玩家id
+     * @param {string} token token
+     */
+    getAchievementList(gameId, token) {
+        let query = {
+            gameId: gameId,
+            token: token
+        };
+        let body = {};
+        return this.request("request", "getAchievementList", Object.assign(query, body), "gameId,token".split(","), "gameId");
+    }
 }
 class gameRPC {
     static rpc_init(srv) {

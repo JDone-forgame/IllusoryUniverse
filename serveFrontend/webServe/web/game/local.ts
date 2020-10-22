@@ -36,7 +36,7 @@ class _ {
      * @route POST /game/local/gmCommand
      * @group game - 活动管理器
      * @param {string} gameId.query.required - 玩家id
-     * @param {string} token.query.required - token
+     * @param {string} token.query.required - 验证token
      * @param {string} cmd.query.required - cmd
      * @returns {{ code: number}} 0 - 操作结果
      */
@@ -58,7 +58,7 @@ class _ {
      * @route POST /game/local/loadPlayerInfo
      * @group game - 活动管理器
      * @param {string} gameId.query.required - 玩家id
-     * @param {string} token.query.required - token
+     * @param {string} token.query.required - 验证token
      * @param {string} cmd.query.required - cmd
      * @returns {{ code: number}} 0 - 操作结果
      */
@@ -67,6 +67,56 @@ class _ {
     @WebRouteModule.route()
     loadPlayerInfo(param: { [key: string]: string }) {
         return gameRPC.inst.loadPlayerInfo(param.gameId, param.token);
+    }
+
+    /**
+     * 获取成就数据列表
+     * @date 2020-10-22
+     * @group achievement - 成就相关
+     * @route POST /game/local/getAchievementList
+     * @param {string} gameId.query.required - 玩家id
+     * @param {string} token.query.required - 验证token
+     * @returns {{code:number}} 200 - 返回内容
+     */
+    @WebRouteModule.route()
+    @WebRouteModule.paramRequired("gameId", "string", true)
+    @WebRouteModule.paramRequired("token", "string", true)
+    async getAchievementList(param: { [key: string]: any }) {      
+        return await gameRPC.inst.getAchievementList(param.gameId, param.token);
+    }
+
+    /**
+     * 获取任务列表
+     * @date 2020-10-22
+     * @group task - 任务相关
+     * @route POST /game/local/getTaskList
+     * @param {string} gameId.query.required - gameId
+     * @param {string} token.query.required - token
+     * @returns {{code:number}} 200 - 返回内容
+     */
+    @WebRouteModule.route()
+    @WebRouteModule.paramRequired("gameId", "string", true)
+    @WebRouteModule.paramRequired("token", "string", true)
+    async getTaskList(param: { [key: string]: any }) {
+        return gameRPC.inst.getTaskList(param.gameId, param.token);
+    }
+
+    /**
+     * 获取任务奖励
+     * @date 2020-10-22
+     * @group task - 任务相关
+     * @route POST /game/local/getTaskAward
+     * @param {string} gameId.query.required - gameId
+     * @param {string} token.query.required - token
+     * @param {string} taskId.query.required - taskId
+     * @returns {{code:number}} 200 - 返回内容
+     */
+    @WebRouteModule.route()
+    @WebRouteModule.paramRequired("gameId", "string", true)
+    @WebRouteModule.paramRequired("token", "string", true)
+    @WebRouteModule.paramRequired("taskId", "string", true)
+    async getTaskAward(param: { [key: string]: any }) {
+        return gameRPC.inst.getTaskAward(param.gameId, param.token, param.taskId);
     }
 
 

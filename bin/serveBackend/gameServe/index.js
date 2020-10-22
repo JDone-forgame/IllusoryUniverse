@@ -7,6 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mx_rpc_1 = require("mx-rpc");
+const achievement_1 = require("./achievement");
 const gamerole_1 = require("./gamerole");
 let game = class game {
     init() {
@@ -61,6 +62,18 @@ let game = class game {
     loadPlayerInfo(gameId, token) {
         return gamerole_1.GameRoleService.loadPlayerInfo(gameId, token);
     }
+    /**
+    * 获取成就数据列表
+    * @route request getAchievementList
+    * @group game - 活动管理器
+    * @key gameId
+    * @param {string} gameId.query.required - 玩家id
+    * @param {string} token.query.required - token
+    * @returns {{code: ErrorCode}} 0 - 返回结果
+    */
+    getAchievementList(gameId, token) {
+        return achievement_1.AchievementService.getAchievementList(gameId, token);
+    }
 };
 __decorate([
     mx_rpc_1.RPCHandle.init()
@@ -77,6 +90,9 @@ __decorate([
 __decorate([
     mx_rpc_1.RPCHandle.route()
 ], game.prototype, "loadPlayerInfo", null);
+__decorate([
+    mx_rpc_1.RPCHandle.route()
+], game.prototype, "getAchievementList", null);
 game = __decorate([
     mx_rpc_1.RPCHandle.class('game', module)
 ], game);

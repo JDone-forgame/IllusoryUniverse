@@ -1,7 +1,8 @@
 import { MongodbMoudle, ReHash } from "mx-database";
+import { LocalDate } from "mx-tool";
 import { DBDefine, ErrorCode } from "../../../defines/defines";
-import { ifAchievementInfo, ifMailInfo, ifTaskInfo, ifUnitRole } from "../../../defines/gamerole";
-import { SeEnumAchievementeType, SeResAchievement } from "../../../defines/interface";
+import { ifAchievementInfo, ifMailInfo, ifTaskInfo, ifUnitRole, TaskStatus } from "../../../defines/gamerole";
+import { SeEnumAchievementeType, SeEnumTaskeTaskType, SeResAchievement, SeResTask } from "../../../defines/interface";
 import { LoggerMoudle } from "../../../lib/logger";
 import { TableMgr } from "../../../lib/TableMgr";
 import { gameRPC } from "../../../rpcs/gameRPC";
@@ -84,19 +85,6 @@ export class UnitRole {
 
     set lastActivityTime(v: number) {
         this.dbInfo.set('lastActivityTime', v);
-    }
-
-    get taskListArray(): ifTaskInfo[] {
-
-        // 初始化任务数据
-        // this.initTaskData();
-
-        let retArray: ifTaskInfo[] = [];
-        let v = this.taskInfos.value;
-        for (let key in v) {
-            retArray.push(v[key]);
-        }
-        return retArray;
     }
 
     get playerItems(): { [itemId: string]: number } {
@@ -201,12 +189,6 @@ export class UnitRole {
         for (let i = 0; i < this.mailInfos.length; i++) {
             let rMail = this.mailInfos[i];
         }
-    }
-
-    // 加载任务
-    async loadTask() {
-        const v = await MongodbMoudle.get_database(DBDefine.db).get_unit<{ [taskId: string]: ifTaskInfo }>(DBDefine.col_task, { _id: this.gameId }).load();
-        this.taskInfos = v;
     }
 
     // 登录前操作
@@ -327,7 +309,7 @@ export class UnitRole {
         return updated;
     }
 
-    // 检查并更新成就数据
+    // 检查并更新成就数据，完成返回真
     private checkAndUpdateAchievementData(acRes: SeResAchievement, updateVal: number): boolean {
         let acId: string = acRes.sID;
         let roleAcDatas = this.achievementInfos.value;
@@ -361,7 +343,7 @@ export class UnitRole {
         return needSaveDB;
     }
 
-    // 更新成就完成次数
+    // 更新成就完成次数，完成返回真
     private updateAchievementCompleteValue(acData: ifAchievementInfo, acRes: SeResAchievement, updateVal: number): boolean {
         let updated: boolean = false;
         
@@ -400,6 +382,7 @@ export class UnitRole {
         }
     }
 
+    // 更新成就任务，完成返回真
     private updateAchievement(acRes: SeResAchievement, updateVal: number): boolean {
         let updated = this.checkAndUpdateAchievementData(acRes, updateVal);
         return updated;
@@ -485,6 +468,207 @@ export class UnitRole {
 
         // 返回结果
         return { code: ErrorCode.ok };
+    }
+
+    // 获取任务列表[返给客户端用的]
+    async getTaskList(): Promise<ifTaskInfo[]> {
+        if (!this.taskInfos) {
+            await this.loadTask();
+        }
+
+        let retList: ifTaskInfo[] = this.taskListArray;
+
+        return (retList);
+    }
+
+    // 加载/初始化任务列表
+    async loadTask() {
+        const v = await MongodbMoudle.get_database(DBDefine.db).get_unit<{ [taskId: string]: ifTaskInfo }>(DBDefine.col_task, { _id: this.gameId }).load();
+        this.taskInfos = v;
+    }
+
+    get taskListArray(): ifTaskInfo[] {
+
+        // 初始化任务数据
+        this.initTaskData();
+
+        let retArray: ifTaskInfo[] = [];
+        let v = this.taskInfos.value;
+        for (let key in v) {
+            retArray.push(v[key]);
+        }
+        return retArray;
+    }
+
+    // 初始化任务数据
+    initTaskData(): void {
+        let taskData = this.taskInfos.value;
+        let taskList: { [key: string]: SeResTask } = TableMgr.inst.getAllTaskRes();
+
+        let nowTime: number = LocalDate.now();
+
+        for (let key in taskList) {
+            let taskConfig: SeResTask = taskList[key];
+            let taskId: string = taskConfig.sID || '';
+            let curTaskInfo: ifTaskInfo = taskData[taskId];
+            if (!curTaskInfo) {
+                // 新增任务
+                curTaskInfo = { taskId: taskId, value: 0, status: TaskStatus.UnComplete, updateTime: nowTime, extra: {} };
+                this.taskInfos.set(taskId.toString(), curTaskInfo);
+            } else {
+                let isDifDay: boolean = !this.isSameDay(curTaskInfo.updateTime, nowTime);
+
+                // 重置每日任务
+                if (isDifDay) {
+                    curTaskInfo.value = 0;
+                        curTaskInfo.status = TaskStatus.UnComplete;
+                        curTaskInfo.updateTime = nowTime;
+                        curTaskInfo.extra = {};
+                        this.taskInfos.set(taskId.toString(), curTaskInfo);
+                }
+            }
+        }
+    }
+
+    // 获取任务奖励
+    async getTaskAward(taskId: string) {
+
+        // 先检查重置任务数据
+        await this.getTaskList();
+
+        let taskConfig: SeResTask = TableMgr.inst.getTaskResById(taskId);
+        if (!taskConfig) {
+            throw { code: ErrorCode.task_invalid_res, errMsg: 'task_invalid_res' }
+        }
+        
+        let taskList = this.taskInfos.value;
+        if (!taskList[taskId]) {
+            throw { code: ErrorCode.task_award_not_find_record, errMsg: "task_award_not_find_record" }; 
+        }
+
+        let taskInfo = taskList[taskId];
+
+        // 任务已经被领取
+        if (taskInfo.status === TaskStatus.Rewarded) {
+            throw { code: ErrorCode.task_already_get_award, errMsg: "task_already_get_award"}
+        }
+
+        let nowTime = LocalDate.now();
+
+        // 对某些类型的任务需要检查完成状态
+        if (taskConfig.eTaskType === SeEnumTaskeTaskType.DingShiDengLu) {
+            let timeCond = taskConfig.sCondition.split("|");
+            if (timeCond && timeCond.length === 2) {
+                let beginHour = parseInt(timeCond[0]);
+                let endHour = parseInt(timeCond[1]);
+                let nowHour = new Date(nowTime).getHours();
+                if (nowHour >= beginHour && nowHour <= endHour) {
+                    taskInfo.status = TaskStatus.CanReward;
+                }
+            }
+        }
+
+        // 任务奖励还不能领取
+        if (taskInfo.status === TaskStatus.UnComplete) {
+            throw { code: ErrorCode.task_award_uncomplete, errMsg: "task_award_uncomplete,"}
+        }
+
+        // 发放任务奖励
+        let rewardItems: Array<string> = taskConfig.asTaskitems;
+        for (let i: number = 0; rewardItems && i < rewardItems.length; ++i) {
+            let rewardItem: Array<string> = rewardItems[i].split(',');
+            if (rewardItem && rewardItem.length == 2) {
+                this.updateItemCount(rewardItem[0], this.getItemCount(rewardItem[0]) + parseInt(rewardItem[1]));
+            }
+        }
+
+        // 更新任务数据
+        taskInfo.updateTime = nowTime;
+        taskInfo.status = TaskStatus.Rewarded;
+
+        // 保存任务数据
+        this.taskInfos.set(taskInfo.taskId, taskInfo);
+
+        return { awardItems: rewardItems }
+    }
+
+    // 更新任务
+    static async updateTask(gameId: string, actionType: SeEnumTaskeTaskType, extra: any = {}) {
+        let role = UnitRole.gameIdMap.get(gameId);
+        if (!role) throw ({ code: ErrorCode.role_no, errMsg: 'no role :' + gameId });
+
+        // 检查任务配置是否有此任务
+        let taskList: SeResTask[] = TableMgr.inst.getTaskInfoByType(actionType);
+        if (taskList.length <= 0) {
+            console.log(`no taskId:${SeEnumTaskeTaskType[actionType]}`)
+            // throw({ code: ErrorCode.role_no_taskType, errMsg: 'no taskId:' + SeEnumTaskeTaskType[actionType] });
+        }
+
+        let isUpdate: boolean = false;
+        for (let i: number = 0; i < taskList.length; ++i) {
+            let updated: boolean = this._updateTask(actionType, role, taskList[i], extra);
+            if (updated) {
+                isUpdate = true;
+            }
+        }
+
+        if (isUpdate) {
+            // 保存数据
+            try {
+                await role.taskInfos.force_save();
+                return { code: ErrorCode.ok, update: isUpdate };
+            }
+            catch (e) {
+                throw ({ code: ErrorCode.db_error, errMsg: e });
+            }
+        } else {
+            return { code: ErrorCode.ok, update: isUpdate };
+        }
+    }
+
+    private static _updateTask(taskType: SeEnumTaskeTaskType, role: UnitRole, taskConfig: SeResTask, extra: any): boolean {
+        let taskId: string = taskConfig.sID || '';
+
+        if (taskType === SeEnumTaskeTaskType.DingShiDengLu) {
+            return false;
+        }
+
+        let nowTime = LocalDate.now();
+        // 没有记录就创建一条新任务数据
+        let curTaskInfo: ifTaskInfo = role.taskInfos.get(taskId.toString()) as ifTaskInfo;
+        if (!curTaskInfo) {
+            curTaskInfo = { taskId: taskId, value: 0, status: TaskStatus.UnComplete, updateTime: nowTime, extra: {} };
+        }
+
+        if (curTaskInfo.status != TaskStatus.UnComplete) {
+            return false;
+        }
+
+        // 如果是邀请好友任务，则需要记录角色数据
+        if (taskType === SeEnumTaskeTaskType.YaoQingHaoYou) {
+            // 说明已经邀请过了
+            if (curTaskInfo.extra.hasOwnProperty(extra.senderId)) {
+                return false;
+            }
+            // 保存好友信息
+            curTaskInfo.extra[extra.senderId] = extra.senderAvatar;
+        }
+
+        curTaskInfo.value++;
+        if (curTaskInfo.value >= parseInt(taskConfig.sCondition)) {
+            curTaskInfo.status = TaskStatus.CanReward;
+        }
+
+        role.taskInfos.set(taskId.toString(), curTaskInfo);
+
+       return true;
+    }   
+    
+    // 判断是否同一天
+    isSameDay(timeStampA: number, timeStampB: number): boolean {
+        let dateA = new Date(timeStampA);
+        let dateB = new Date(timeStampB);
+        return (dateA.setHours(0, 0, 0, 0) == dateB.setHours(0, 0, 0, 0));
     }
 
 }

@@ -12,7 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UnitRole = void 0;
 const mx_database_1 = require("mx-database");
 const defines_1 = require("../../../defines/defines");
+const interface_1 = require("../../../defines/interface");
 const logger_1 = require("../../../lib/logger");
+const TableMgr_1 = require("../../../lib/TableMgr");
 const gameRPC_1 = require("../../../rpcs/gameRPC");
 class UnitRole {
     static init() {
@@ -90,15 +92,25 @@ class UnitRole {
     // 发给客户端的数据
     toClient() {
         let loginInfo = {
+            // 玩家姓名
             playerName: this.playerName,
+            // 玩家密码
             pwd: this.pwd,
+            // gameId
             gameId: this.gameId,
+            // 是否是新手
             isNewPlayer: this.isNew,
+            // 是否是创世神
             isCreatorGod: false,
+            // 任务列表
             task: this.taskListArray,
+            // 邮件列表
             mail: this.mailInfos,
+            // 玩家道具
             items: this.playerItems || {},
+            // 氤氲元魂
             breath: this.breath || 0,
+            // 上次活跃的时间
             lastActivityTime: this.lastActivityTime,
         };
         return loginInfo;
@@ -250,6 +262,167 @@ class UnitRole {
         // }
         let newItems = this.dbInfo.get('playerItems') || {};
         return newItems[itemId] || 0;
+    }
+    // 获取成就数据列表
+    get achievementDataList() {
+        // 初始化成就数据
+        this.initAchievementData();
+        // 包含各个成就状态信息的数组
+        let retArray = [];
+        let v = this.achievementInfos.value;
+        for (let key in v) {
+            retArray.push(v[key]);
+        }
+        return retArray;
+    }
+    // 初始化成就数据，完成返回真
+    initAchievementData() {
+        let updated = false;
+        // 读取表中所有成就
+        let allAchievementRes = TableMgr_1.TableMgr.inst.getAllAchievementRes();
+        for (let key in allAchievementRes) {
+            // 匹配成就
+            let acRes = allAchievementRes[key];
+            updated = this.checkAndUpdateAchievementData(acRes, 0);
+        }
+        return updated;
+    }
+    // 检查并更新成就数据
+    checkAndUpdateAchievementData(acRes, updateVal) {
+        let acId = acRes.sID;
+        let roleAcDatas = this.achievementInfos.value;
+        let needSaveDB = false;
+        let curAcData = roleAcDatas[acId];
+        // 新增成就数据
+        if (!curAcData) {
+            curAcData = { acId: acId, completeVaule: 0, awardStages: [] };
+            needSaveDB = true;
+        }
+        if (!curAcData) {
+            // 理论上不应该出现
+            return needSaveDB;
+        }
+        let updated = false;
+        // 更新已经完成的次数
+        updated = this.updateAchievementCompleteValue(curAcData, acRes, updateVal);
+        if (updated) {
+            needSaveDB = true;
+        }
+        if (needSaveDB) {
+            this.achievementInfos.set(acId.toString(), curAcData);
+        }
+        return needSaveDB;
+    }
+    // 更新成就完成次数
+    updateAchievementCompleteValue(acData, acRes, updateVal) {
+        let updated = false;
+        if (updateVal <= 0) {
+            return updated;
+        }
+        switch (acRes.eType) {
+            case interface_1.SeEnumAchievementeType.IU_FenZhi:
+                acData.completeVaule += updateVal;
+                updated = true;
+                break;
+            case interface_1.SeEnumAchievementeType.IU_ZhuXian:
+                acData.completeVaule += updateVal;
+                updated = true;
+                break;
+        }
+        return updated;
+    }
+    // 按成就类型触发更新成就信息
+    TriggerCheckAchievementByType(achievementType, updateVal) {
+        // 获取指定类型成就配置信息
+        let acResList = TableMgr_1.TableMgr.inst.getAchievementResByType(achievementType);
+        if (acResList.length <= 0) {
+            return;
+        }
+        for (let i = 0; i < acResList.length; ++i) {
+            let acRes = acResList[i];
+            if (acRes.eType !== achievementType) {
+                continue;
+            }
+            this.updateAchievement(acResList[i], updateVal);
+        }
+    }
+    updateAchievement(acRes, updateVal) {
+        let updated = this.checkAndUpdateAchievementData(acRes, updateVal);
+        return updated;
+    }
+    // 加载/初始化成就列表
+    loadAchievement() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const v = yield mx_database_1.MongodbMoudle.get_database(defines_1.DBDefine.db).get_unit(defines_1.DBDefine.col_achievement, { _id: this.gameId }).load();
+            this.achievementInfos = v;
+        });
+    }
+    // 获取成就列表[返给客户端用的]
+    getAchievementList() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.achievementInfos) {
+                yield this.loadAchievement();
+            }
+            let retList = this.achievementDataList;
+            return retList;
+        });
+    }
+    // 领取成就奖励
+    getAchievementAward(acId, stage) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.achievementInfos) {
+                yield this.loadAchievement();
+            }
+            // 获取成就配置信息
+            let acRes = TableMgr_1.TableMgr.inst.getAchievementResById(acId);
+            if (!acRes) {
+                throw { code: defines_1.ErrorCode.achievement_table_res_fail, errMsg: 'achievement table res fail' };
+            }
+            // 检查是否存在对应的阶段
+            let stageCondition = TableMgr_1.TableMgr.inst.getAchievementStageCondition(acRes, stage);
+            if (stageCondition < 0) {
+                throw { code: defines_1.ErrorCode.achievement_invalid_stage, errMsg: 'achievement invalid stage' };
+            }
+            // 获取当前成就数据
+            let roleAcDatas = this.achievementInfos.value;
+            let curAcData = roleAcDatas[acId];
+            if (!curAcData) {
+                throw { code: defines_1.ErrorCode.achievement_invalid_data, errMsg: 'achievement invalid data' };
+            }
+            // 检查是否已经领取对应的阶段奖励
+            for (let i = 0; i < curAcData.awardStages.length; ++i) {
+                let completeCondition = curAcData.awardStages[i];
+                if (completeCondition === stageCondition) {
+                    // 说明已经领取过奖励了
+                    throw { code: defines_1.ErrorCode.achievement_repeat_award, errMsg: 'achievement repeat award' };
+                }
+            }
+            // 检查玩家是否已经达到领取条件
+            if (curAcData.completeVaule < stageCondition) {
+                throw { code: defines_1.ErrorCode.achievement_not_complete, errMsg: 'achievement no complete' };
+            }
+            // 获取奖励物品列表
+            let awardItems = TableMgr_1.TableMgr.inst.getAchievementAwardItems(acRes, stage);
+            if (!awardItems || awardItems.length <= 0) {
+                throw { code: defines_1.ErrorCode.achievement_table_res_fail, errMsg: 'achievement table res fail' };
+            }
+            // 更新成就数据
+            curAcData.awardStages.push(stageCondition);
+            this.achievementInfos.set(acId, curAcData);
+            // 下放奖励物品
+            for (let i = 0; i < awardItems.length; ++i) {
+                let awardItemString = awardItems[i];
+                let awardItem = awardItemString.split(',');
+                if (awardItem.length !== 2) {
+                    continue;
+                }
+                let awardItemId = awardItem[0];
+                let awardItemCount = parseInt(awardItem[1]);
+                this.updateItemCount(awardItemId, this.getItemCount(awardItemId) + awardItemCount);
+            }
+            // 返回结果
+            return { code: defines_1.ErrorCode.ok };
+        });
     }
 }
 exports.UnitRole = UnitRole;

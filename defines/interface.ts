@@ -16,3 +16,25 @@ export interface SeResAchievement{
       // 成就奖励
       asGiftitems:Array<string>;
 }
+
+// 任务类型
+export enum SeEnumTaskeTaskType{ 
+      IU_ZhuXian = 1,
+      IU_FenZhi = 2,
+      DingShiDengLu = 3,
+      YaoQingHaoYou = 4
+}
+
+// 任务信息
+export interface SeResTask{ 
+      sID:string;
+      sTaskTitle:string;
+      eTaskType:SeEnumTaskeTaskType;
+      sCondition:string;
+      asTaskitems:Array<string>;
+      sDescribe:string;
+      iTaskOrder:number;
+      sIcon:string;
+      sJumpType:string;
+      iPrompt:number;
+}

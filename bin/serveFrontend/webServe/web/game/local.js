@@ -48,7 +48,7 @@ let _ = class _ {
      * @route POST /game/local/gmCommand
      * @group game - 活动管理器
      * @param {string} gameId.query.required - 玩家id
-     * @param {string} token.query.required - token
+     * @param {string} token.query.required - 验证token
      * @param {string} cmd.query.required - cmd
      * @returns {{ code: number}} 0 - 操作结果
      */
@@ -66,12 +66,26 @@ let _ = class _ {
      * @route POST /game/local/loadPlayerInfo
      * @group game - 活动管理器
      * @param {string} gameId.query.required - 玩家id
-     * @param {string} token.query.required - token
+     * @param {string} token.query.required - 验证token
      * @param {string} cmd.query.required - cmd
      * @returns {{ code: number}} 0 - 操作结果
      */
     loadPlayerInfo(param) {
         return gameRPC_1.gameRPC.inst.loadPlayerInfo(param.gameId, param.token);
+    }
+    /**
+     * 获取成就数据列表
+     * @date 2020-10-22
+     * @group achievement - 成就相关
+     * @route POST /game/local/getAchievementList
+     * @param {string} gameId.query.required - 玩家id
+     * @param {string} token.query.required - 验证token
+     * @returns {{code:number}} 200 - 返回内容
+     */
+    getAchievementList(param) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield gameRPC_1.gameRPC.inst.getAchievementList(param.gameId, param.token);
+        });
     }
 };
 __decorate([
@@ -90,6 +104,11 @@ __decorate([
     mx_webserve_1.WebRouteModule.paramRequired("token", "string", true),
     mx_webserve_1.WebRouteModule.route()
 ], _.prototype, "loadPlayerInfo", null);
+__decorate([
+    mx_webserve_1.WebRouteModule.route(),
+    mx_webserve_1.WebRouteModule.paramRequired("gameId", "string", true),
+    mx_webserve_1.WebRouteModule.paramRequired("token", "string", true)
+], _.prototype, "getAchievementList", null);
 _ = __decorate([
     mx_webserve_1.WebRouteModule.class(module)
 ], _);

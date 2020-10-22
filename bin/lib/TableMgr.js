@@ -47,8 +47,6 @@ class PltFileList {
 class TableMgr {
     constructor() {
         this.name = "TableMgr";
-        this._signList = [];
-        this._mflsTaskList = [];
     }
     static get inst() {
         if (!this._inst) {
@@ -61,146 +59,56 @@ class TableMgr {
      */
     init() {
         return __awaiter(this, void 0, void 0, function* () {
-            this._global = mx_resource_1.ResourceModule.watch(PltFileList.get_plt_file("Global"));
-            this._item = mx_resource_1.ResourceModule.watch(PltFileList.get_plt_file("Item"));
-            this._sign = mx_resource_1.ResourceModule.watch(PltFileList.get_plt_file("Sign"));
-            this._task = mx_resource_1.ResourceModule.watch(PltFileList.get_plt_file("Task"));
-            this.initSignList();
+            this._achievement = mx_resource_1.ResourceModule.watch(PltFileList.get_plt_file("Achievement"));
             return true;
         });
     }
     /**
-     * 获取全局配置id
-     * @param sKey
-     */
-    getGlobalConfig(sKey) {
-        let res = this._global.getAllRes();
-        for (let id in res) {
-            let configInfo = res[id];
-            if (configInfo && configInfo.sGlobalType == sKey) {
-                return configInfo.sGlobalData;
-            }
-        }
-        return "";
-    }
-    getItemInfo(sId) {
-        let res = this._item.getAllRes();
-        for (let id in res) {
-            let configInfo = res[id];
-            if (configInfo && configInfo.sID == sId) {
-                return configInfo;
-            }
-        }
-        return null;
-    }
-    /**
-     * 将签到配置保存到列表中
-     */
-    initSignList() {
-        this._signList = [];
-        let res = this._sign.getAllRes();
-        for (let id in res) {
-            let configInfo = res[id];
-            this._signList.push(configInfo);
-        }
-    }
-    /**
-    * 获取下一轮的签到配置ID
-    * @param curSignID
-    */
-    getNextSignID(curSignID) {
-        let nextSignID = "";
-        if (this._signList.length <= 0) {
-            return nextSignID;
-        }
-        if (!curSignID || curSignID == "") {
-            return this._signList[0].sID;
-        }
-        let curSignIndex = -1;
-        for (let i = 0; i < this._signList.length; ++i) {
-            let config = this._signList[i];
-            if (config.sID === curSignID) {
-                curSignIndex = i;
-                break;
-            }
-        }
-        let nextSignIndex = curSignIndex + 1;
-        if (nextSignIndex < 0 || nextSignIndex >= this._signList.length) {
-            nextSignIndex = 0;
-        }
-        return this._signList[nextSignIndex].sID;
-    }
-    getNextSignAwardByID(signID) {
-        let award = [];
-        let allRes = this._sign.getAllRes();
-        if (!allRes[signID]) {
-            return award;
-        }
-        let signRes = allRes[signID];
-        if (!signRes) {
-            return award;
-        }
-        // 说明同时配了两组奖励，需要由玩家选择
-        if (signRes.asGiftOne && signRes.asGiftTwo) {
-            return award;
-        }
-        if (signRes.asGiftOne) {
-            return signRes.asGiftOne;
-        }
-        else {
-            return signRes.asGiftTwo;
-        }
-    }
-    getSignAwardByIndex(signID, index) {
-        let award = [];
-        let signRes = this._sign.getRes(signID);
-        if (!signRes) {
-            return award;
-        }
-        if (index == 0) {
-            return signRes.asGiftOne;
-        }
-        else {
-            return signRes.asGiftTwo;
-        }
-    }
-    getNextMflsTaskRes(curTaskID) {
-        let taskRes = null;
-        for (let i = 0; i < this._mflsTaskList.length; ++i) {
-            if (this._mflsTaskList[i].sUnlock == curTaskID) {
-                taskRes = this._mflsTaskList[i];
-                break;
-            }
-        }
-        return taskRes;
-    }
-    /**
-     * 获取所有的任务列表
-     */
-    getAllTaskRes() {
-        return this._task.getAllRes();
-    }
-    /**
-     * 通过任务id获取任务信息
+     * 通过成就id获取成就资源
      * @param taskId
      */
-    getTaskResById(taskId) {
-        return this._task.getRes(taskId);
+    getAchievementResById(acId) {
+        return this._achievement.getRes(acId);
     }
     /**
-     * 获取指定类型的任务
-     * @param nType
+     * 获取所有的成就列表
      */
-    getTaskInfoByType(nType) {
-        let res = this._task.getAllRes();
+    getAllAchievementRes() {
+        return this._achievement.getAllRes();
+    }
+    /**
+     * 获取指定类型的成就信息
+     * @param type
+     */
+    getAchievementResByType(type) {
+        let res = this._achievement.getAllRes();
         let ret = [];
-        for (let taskId in res) {
-            let taskInfo = res[taskId];
-            if (taskInfo && taskInfo.eTaskType == nType) {
-                ret.push(taskInfo);
+        for (let acId in res) {
+            let acRes = res[acId];
+            if (acRes && acRes.eType == type) {
+                ret.push(acRes);
             }
         }
         return ret;
+    }
+    // 得到完成指定阶段成就的条件值
+    getAchievementStageCondition(acRes, stage) {
+        let condValue = -1;
+        if (stage >= acRes.aiCondition.length) {
+            return condValue;
+        }
+        condValue = acRes.aiCondition[stage];
+        return condValue;
+    }
+    // 获取指定成就阶段奖励物品列表
+    getAchievementAwardItems(acRes, stage) {
+        let awardItems = [];
+        if (stage >= acRes.asGiftitems.length) {
+            return awardItems;
+        }
+        let awardString = acRes.asGiftitems[stage];
+        awardItems = awardString.split(";");
+        return awardItems;
     }
 }
 exports.TableMgr = TableMgr;
