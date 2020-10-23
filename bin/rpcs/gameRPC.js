@@ -88,6 +88,36 @@ gm指令
         let body = {};
         return this.request("request", "getAchievementList", Object.assign(query, body), "gameId,token".split(","), "gameId");
     }
+    /**
+     *
+获取任务列表
+     * @param {string} gameId 玩家id
+     * @param {string} token token
+     */
+    getTaskList(gameId, token) {
+        let query = {
+            gameId: gameId,
+            token: token
+        };
+        let body = {};
+        return this.request("request", "getTaskList", Object.assign(query, body), "gameId,token".split(","), "gameId");
+    }
+    /**
+     *
+获取任务奖励
+     * @param {string} gameId 玩家id
+     * @param {string} token token
+     * @param {string} taskId taskId
+     */
+    getTaskAward(gameId, token, taskId) {
+        let query = {
+            gameId: gameId,
+            token: token,
+            taskId: taskId
+        };
+        let body = {};
+        return this.request("request", "getTaskAward", Object.assign(query, body), "gameId,token,taskId".split(","), "gameId");
+    }
 }
 class gameRPC {
     static rpc_init(srv) {

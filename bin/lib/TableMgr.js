@@ -60,6 +60,7 @@ class TableMgr {
     init() {
         return __awaiter(this, void 0, void 0, function* () {
             this._achievement = mx_resource_1.ResourceModule.watch(PltFileList.get_plt_file("Achievement"));
+            this._task = mx_resource_1.ResourceModule.watch(PltFileList.get_plt_file("Task"));
             return true;
         });
     }
@@ -109,6 +110,26 @@ class TableMgr {
         let awardString = acRes.asGiftitems[stage];
         awardItems = awardString.split(";");
         return awardItems;
+    }
+    // 获取所有的任务列表
+    getAllTaskRes() {
+        return this._task.getAllRes();
+    }
+    // 获取指定类型的任务
+    getTaskInfoByType(nType) {
+        let res = this._task.getAllRes();
+        let ret = [];
+        for (let taskId in res) {
+            let taskInfo = res[taskId];
+            if (taskInfo && taskInfo.eTaskType == nType) {
+                ret.push(taskInfo);
+            }
+        }
+        return ret;
+    }
+    // 通过任务id获取任务信息
+    getTaskResById(taskId) {
+        return this._task.getRes(taskId);
     }
 }
 exports.TableMgr = TableMgr;

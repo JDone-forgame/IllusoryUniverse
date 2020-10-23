@@ -87,6 +87,35 @@ let _ = class _ {
             return yield gameRPC_1.gameRPC.inst.getAchievementList(param.gameId, param.token);
         });
     }
+    /**
+     * 获取任务列表
+     * @date 2020-10-22
+     * @group task - 任务相关
+     * @route POST /game/local/getTaskList
+     * @param {string} gameId.query.required - gameId
+     * @param {string} token.query.required - token
+     * @returns {{code:number}} 200 - 返回内容
+     */
+    getTaskList(param) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return gameRPC_1.gameRPC.inst.getTaskList(param.gameId, param.token);
+        });
+    }
+    /**
+     * 获取任务奖励
+     * @date 2020-10-22
+     * @group task - 任务相关
+     * @route POST /game/local/getTaskAward
+     * @param {string} gameId.query.required - gameId
+     * @param {string} token.query.required - token
+     * @param {string} taskId.query.required - taskId
+     * @returns {{code:number}} 200 - 返回内容
+     */
+    getTaskAward(param) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return gameRPC_1.gameRPC.inst.getTaskAward(param.gameId, param.token, param.taskId);
+        });
+    }
 };
 __decorate([
     mx_webserve_1.WebRouteModule.route(),
@@ -109,6 +138,17 @@ __decorate([
     mx_webserve_1.WebRouteModule.paramRequired("gameId", "string", true),
     mx_webserve_1.WebRouteModule.paramRequired("token", "string", true)
 ], _.prototype, "getAchievementList", null);
+__decorate([
+    mx_webserve_1.WebRouteModule.route(),
+    mx_webserve_1.WebRouteModule.paramRequired("gameId", "string", true),
+    mx_webserve_1.WebRouteModule.paramRequired("token", "string", true)
+], _.prototype, "getTaskList", null);
+__decorate([
+    mx_webserve_1.WebRouteModule.route(),
+    mx_webserve_1.WebRouteModule.paramRequired("gameId", "string", true),
+    mx_webserve_1.WebRouteModule.paramRequired("token", "string", true),
+    mx_webserve_1.WebRouteModule.paramRequired("taskId", "string", true)
+], _.prototype, "getTaskAward", null);
 _ = __decorate([
     mx_webserve_1.WebRouteModule.class(module)
 ], _);

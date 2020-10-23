@@ -40,9 +40,11 @@ var ErrorCode;
     ErrorCode[ErrorCode["role_no_engough_diamond"] = 10009] = "role_no_engough_diamond";
     ErrorCode[ErrorCode["role_no_nickname"] = 10010] = "role_no_nickname";
     ErrorCode[ErrorCode["login_error"] = 10011] = "login_error";
-    // 任务
-    ErrorCode[ErrorCode["task_can_not_reward"] = 10031] = "task_can_not_reward";
-    ErrorCode[ErrorCode["task_not_found"] = 10032] = "task_not_found";
+    // 任务相关
+    ErrorCode[ErrorCode["task_award_not_find_record"] = 10600] = "task_award_not_find_record";
+    ErrorCode[ErrorCode["task_invalid_res"] = 10601] = "task_invalid_res";
+    ErrorCode[ErrorCode["task_already_get_award"] = 10602] = "task_already_get_award";
+    ErrorCode[ErrorCode["task_award_uncomplete"] = 10603] = "task_award_uncomplete";
     // 主界面
     ErrorCode[ErrorCode["home_choppingboard_no_pos"] = 10080] = "home_choppingboard_no_pos";
     ErrorCode[ErrorCode["role_no_enough_gold"] = 10081] = "role_no_enough_gold";
